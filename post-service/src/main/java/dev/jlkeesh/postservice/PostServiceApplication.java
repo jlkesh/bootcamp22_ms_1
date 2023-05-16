@@ -1,13 +1,19 @@
 package dev.jlkeesh.postservice;
 
 
+import feign.Feign;
+import feign.RetryableException;
+import feign.Retryer;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.*;
-import org.springframework.beans.factory.annotation.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -16,11 +22,7 @@ import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
@@ -148,7 +150,7 @@ class PostDetailsClient {
 }
 */
 
-@FeignClient(name = "${post.details.service.baseUrl}")
+@FeignClient(value = "${post.details.service.baseUrl}")
 interface PostDetailsClient {
     @GetMapping("/{id}")
     Object get(@PathVariable("id") Integer postId);
@@ -188,12 +190,66 @@ class CommentClient {
 
 @FeignClient(name = "${comment.service.baseUrl}")
 interface CommentClient {
-    @CircuitBreaker(name = "postDetailsCircuit", fallbackMethod = "getAllByPostIdFallback")
+    Logger log = LoggerFactory.getLogger(CommentClient.class.getName());
+
+    /*@CircuitBreaker(name = "postDetailsCircuit", fallbackMethod = "getAllByPostIdCircuitBreakerFallback")
+    @Bulkhead(name = "postDetailsBulkhead",
+            type = Bulkhead.Type.THREADPOOL,
+            fallbackMethod = "getAllByPostIdBulkheadFallback")*/
+    //@Retry(name = "postDetailsRetry", fallbackMethod = "postDetailsRetryFallback")
     @GetMapping("/{id}/post")
     List<Comment> getAllByPostId(@PathVariable("id") Integer postId);
 
     @SuppressWarnings("unused")
-    default List<Comment> getAllByPostIdFallback(Integer postId, Exception e) {
+    default List<Comment> getAllByPostIdCircuitBreakerFallback(Integer postId, Exception e) {
+        log.error("Error : {}", e.getMessage(), e);
         return Collections.emptyList();
+    }
+
+    @SuppressWarnings("unused")
+    default List<Comment> getAllByPostIdBulkheadFallback(Integer postId, Exception e) {
+        log.error("Error : {}", e.getMessage(), e);
+        return Collections.emptyList();
+    }
+
+    @SuppressWarnings("unused")
+    default List<Comment> postDetailsRetryFallback(Integer postId, Exception e) {
+        log.error("Error : {}", e.getMessage(), e);
+        log.error("Retrying : {}", System.currentTimeMillis());
+        return Collections.emptyList();
+    }
+}
+
+class MYRetry implements Retryer {
+
+    private final int maxAttempts;
+    private final long backoff;
+    int attempt;
+
+    public MYRetry() {
+        this(100, 3);
+    }
+
+    public MYRetry(long backoff, int maxAttempts) {
+        this.backoff = backoff;
+        this.maxAttempts = maxAttempts;
+        this.attempt = 1;
+    }
+
+    public void continueOrPropagate(RetryableException e) {
+        if (attempt++ >= maxAttempts) {
+            throw e;
+        }
+
+        try {
+            Thread.sleep(backoff);
+        } catch (InterruptedException ignored) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    @Override
+    public Retryer clone() {
+        return new MYRetry(backoff, maxAttempts);
     }
 }

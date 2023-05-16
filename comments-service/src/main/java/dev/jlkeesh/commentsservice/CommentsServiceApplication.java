@@ -45,6 +45,9 @@ class CommentController {
 
     @GetMapping("/{postId}/post")
     public List<Comment> getAllByPostID(@PathVariable Integer postId) throws InterruptedException {
+        System.out.println("Retrying ::: " + System.currentTimeMillis());
+        if (false)
+            throw new RuntimeException("Error From ELSHOD");
         TimeUnit.SECONDS.sleep(2);
         return commentRepository.findAllByPostID(postId);
     }

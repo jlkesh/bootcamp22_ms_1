@@ -13,6 +13,17 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connectTimeout: 100
+            readTimeout: 100
+            retryer: 'dev.jlkeesh.postservice.MYRetry'
+
+
 eureka:
   client:
     service-url:
@@ -20,12 +31,11 @@ eureka:
 post:
   details:
     service:
-      baseUrl: http://POST-DETAILS-SERVICE/api/post-details
-      details: ${post.details.service.baseUrl}/{id}
+      baseUrl: POST-DETAILS-SERVICE/api/post-details
 comment:
   service:
-    baseUrl: http://COMMENT-SERVICE/api/comments
-    commentsByPostID: ${comment.service.baseUrl}/{id}/post
+    baseUrl: COMMENT-SERVICE/api/comments
+
 
 resilience4j:
   circuitbreaker:
@@ -37,3 +47,28 @@ resilience4j:
         minimumNumberOfCalls: 3
         slowCallDurationThreshold: 1000
         waitDurationInOpenState: 10000
+  retry:
+    instances:
+      postDetailsRetry:
+        maxAttempts: 5
+        wait-duration: 20ms
+        enableExponentialBackoff: true
+  #        ignore-exceptions:
+  #          - java.lang.Throwable
+
+
+  bulkhead:
+    instances:
+      postDetailsBulkhead:
+        max-concurrent-calls: 20
+        max-wait-duration:
+          seconds: 10
+  thread-pool-bulkhead:
+    instances:
+      postDetailsBulkhead:
+        core-thread-pool-size: 10
+        max-thread-pool-size: 20
+        keep-alive-duration:
+          seconds: 60
+        queue-capacity: 1000
+        writable-stack-trace-enabled: true
