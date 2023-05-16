@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: post-service
+  datasource:
+    url: jdbc:h2:file:./posts_db
+    username: sa
+    password: sa
+    driver-class-name: org.h2.Driver
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8671/eureka
+post:
+  details:
+    service:
+      baseUrl: http://POST-DETAILS-SERVICE/api/post-details
+      details: ${post.details.service.baseUrl}/{id}
+comment:
+  service:
+    baseUrl: http://COMMENT-SERVICE/api/comments
+    commentsBypostID: ${comment.service.baseUrl}/{id}
