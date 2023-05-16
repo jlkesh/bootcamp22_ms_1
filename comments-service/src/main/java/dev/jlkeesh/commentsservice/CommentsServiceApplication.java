@@ -45,7 +45,7 @@ class CommentController {
 
     @GetMapping("/{postId}/post")
     public List<Comment> getAllByPostID(@PathVariable Integer postId) throws InterruptedException {
-        TimeUnit.SECONDS.sleep(10);
+        TimeUnit.SECONDS.sleep(2);
         return commentRepository.findAllByPostID(postId);
     }
 

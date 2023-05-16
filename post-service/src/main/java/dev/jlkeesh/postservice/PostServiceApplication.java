@@ -1,17 +1,20 @@
 package dev.jlkeesh.postservice;
 
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
-import jakarta.persistence.*;
-import jakarta.validation.Valid;
+
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import lombok.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.web.client.RestTemplateBuilderConfigurer;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
-import org.springframework.cloud.netflix.hystrix.EnableHystrix;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,15 +24,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 
 @SpringBootApplication
 @EnableDiscoveryClient
-@EnableHystrix
+@EnableFeignClients
 public class PostServiceApplication {
 
     public static void main(String[] args) {
@@ -40,7 +40,7 @@ public class PostServiceApplication {
     @LoadBalanced
     public RestTemplate restTemplate(RestTemplateBuilder builder) {
         return builder
-                .setReadTimeout(Duration.ofSeconds(3))
+                /*.setReadTimeout(Duration.ofSeconds(3))*/
                 .build();
     }
 }
@@ -51,9 +51,9 @@ public class PostServiceApplication {
 @RequiredArgsConstructor
 class PostController {
     private final PostRepository postRepository;
-    private final RestTemplate restTemplate;
     private final PostDetailsClient postDetailsClient;
     private final CommentClient commentClient;
+
 
     @GetMapping
     public List<Post> getAll() {
@@ -86,7 +86,7 @@ class PostController {
     @PostMapping
     public Post create(@RequestBody PostCreateDTO dto) {
         var post = postRepository.save(new Post(dto.title(), dto.summary()));
-        postDetailsClient.create(dto);
+        postDetailsClient.create(new PostDetailsCreateDTO(post.getId(), dto.body()));
         return post;
     }
 
@@ -128,6 +128,7 @@ record PostDetailsCreateDTO(Integer postId, String body) {
 record Comment(Integer id, String message, Integer postId) {
 }
 
+/*
 @Service
 @RequiredArgsConstructor
 class PostDetailsClient {
@@ -141,10 +142,22 @@ class PostDetailsClient {
         return restTemplate.getForObject(url, Object.class, postId);
     }
 
-    public void create(PostCreateDTO dto) {
+    public void create(PostDetailsCreateDTO dto) {
         restTemplate.postForObject(createUrl, dto, Object.class);
     }
 }
+*/
+
+@FeignClient(name = "${post.details.service.baseUrl}")
+interface PostDetailsClient {
+    @GetMapping("/{id}")
+    Object get(@PathVariable("id") Integer postId);
+
+    @PostMapping
+    Object create(@RequestBody PostDetailsCreateDTO dto);
+}
+/*
+
 
 @Service
 @RequiredArgsConstructor
@@ -152,11 +165,11 @@ class CommentClient {
 
     private final RestTemplate restTemplate;
 
-    @Value(value = "${comment.service.commentsBypostID}")
+    @Value(value = "${comment.service.commentsByPostID}")
     private String url;
 
 
-    @HystrixCommand(fallbackMethod = "getAllByPostIdFallback")
+    @CircuitBreaker(name = "postDetailsCircuit", fallbackMethod = "getAllByPostIdFallback")
     public List<Comment> getAllByPostId(Integer postId) {
         return restTemplate.exchange(url,
                 HttpMethod.GET,
@@ -166,7 +179,21 @@ class CommentClient {
                 postId).getBody();
     }
 
-    public List<Comment> getAllByPostIdFallback(Integer postId) {
+    @SuppressWarnings("unused")
+    public List<Comment> getAllByPostIdFallback(Integer postId, Exception e) {
+        return Collections.emptyList();
+    }
+}*/
+
+
+@FeignClient(name = "${comment.service.baseUrl}")
+interface CommentClient {
+    @CircuitBreaker(name = "postDetailsCircuit", fallbackMethod = "getAllByPostIdFallback")
+    @GetMapping("/{id}/post")
+    List<Comment> getAllByPostId(@PathVariable("id") Integer postId);
+
+    @SuppressWarnings("unused")
+    default List<Comment> getAllByPostIdFallback(Integer postId, Exception e) {
         return Collections.emptyList();
     }
 }

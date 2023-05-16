@@ -25,4 +25,15 @@ post:
 comment:
   service:
     baseUrl: http://COMMENT-SERVICE/api/comments
-    commentsBypostID: ${comment.service.baseUrl}/{id}
+    commentsByPostID: ${comment.service.baseUrl}/{id}/post
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      postDetailsCircuit:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        minimumNumberOfCalls: 3
+        slowCallDurationThreshold: 1000
+        waitDurationInOpenState: 10000
