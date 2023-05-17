@@ -1,83 +1,8 @@
 spring:
   application:
     name: post-service
-  datasource:
-    url: jdbc:h2:file:./posts_db
-    username: sa
-    password: sa
-    driver-class-name: org.h2.Driver
-  jpa:
-    show-sql: true
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        format_sql: true
-
-  cloud:
-    openfeign:
-      client:
-        config:
-          default:
-            connectTimeout: 2000
-            readTimeout: 2000
-            retryer: 'dev.jlkeesh.postservice.MYRetry'
-
 
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:8671/eureka
-post:
-  details:
-    service:
-      baseUrl: http://POST-DETAILS-SERVICE/api/post-details
-comment:
-  service:
-    baseUrl: http://COMMENT-SERVICE/api/comments
-
-
-resilience4j:
-  circuitbreaker:
-    instances:
-      postDetailsCircuit:
-        registerHealthIndicator: true
-        slidingWindowSize: 10
-        failureRateThreshold: 50
-        minimumNumberOfCalls: 3
-        slowCallDurationThreshold: 1000
-        waitDurationInOpenState: 10000
-  retry:
-    instances:
-      postDetailsRetry:
-        maxAttempts: 5
-        wait-duration: 20ms
-        enableExponentialBackoff: true
-  #        ignore-exceptions:
-  #          - java.lang.Throwable
-
-
-  bulkhead:
-    instances:
-      postDetailsBulkhead:
-        max-concurrent-calls: 20
-        max-wait-duration:
-          seconds: 10
-  thread-pool-bulkhead:
-    instances:
-      postDetailsBulkhead:
-        core-thread-pool-size: 10
-        max-thread-pool-size: 20
-        keep-alive-duration:
-          seconds: 60
-        queue-capacity: 1000
-        writable-stack-trace-enabled: true
-management:
-  tracing:
-    sampling:
-      probability: 1.0
-
-# https://amithkumarg.medium.com/distributed-tracing-with-spring-boot-micrometer-opentelemetry-and-jaeger-fafd5c0bd282
-logging:
-  pattern:
-    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'

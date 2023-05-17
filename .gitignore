@@ -162,3 +162,6 @@ fabric.properties
 /server-registry/.gitignore
 /.idea/.gitignore
 /.idea/vcs.xml
+/config-service/.mvn/wrapper/maven-wrapper.properties
+/config-service/mvnw
+/config-service/mvnw.cmd
