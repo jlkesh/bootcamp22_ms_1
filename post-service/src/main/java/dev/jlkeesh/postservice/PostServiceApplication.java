@@ -12,6 +12,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -51,6 +52,7 @@ public class PostServiceApplication {
 @RestController
 @RequestMapping("/api/posts")
 @RequiredArgsConstructor
+@Slf4j
 class PostController {
     private final PostRepository postRepository;
     private final PostDetailsClient postDetailsClient;
@@ -70,6 +72,7 @@ class PostController {
 
     @GetMapping("/{id}/details")
     public PostDetail getDetail(@PathVariable Integer id) {
+        log.info("Getting Post Details With id : {}", id);
         var post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found: %s".formatted(id)));
         return new PostDetail(post.getId(),

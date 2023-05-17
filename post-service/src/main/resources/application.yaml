@@ -19,8 +19,8 @@ spring:
       client:
         config:
           default:
-            connectTimeout: 100
-            readTimeout: 100
+            connectTimeout: 2000
+            readTimeout: 2000
             retryer: 'dev.jlkeesh.postservice.MYRetry'
 
 
@@ -72,3 +72,9 @@ resilience4j:
           seconds: 60
         queue-capacity: 1000
         writable-stack-trace-enabled: true
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+
+# https://amithkumarg.medium.com/distributed-tracing-with-spring-boot-micrometer-opentelemetry-and-jaeger-fafd5c0bd282
