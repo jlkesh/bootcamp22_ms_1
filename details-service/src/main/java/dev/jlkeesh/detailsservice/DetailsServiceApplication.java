@@ -2,6 +2,7 @@ package dev.jlkeesh.detailsservice;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
@@ -20,6 +21,7 @@ public class DetailsServiceApplication {
 @RestController
 @RequestMapping("/api/post-details")
 @RequiredArgsConstructor
+@Slf4j
 class PostDetailsController {
     private final PostDetailsRepository postDetailsRepository;
 
@@ -29,6 +31,7 @@ class PostDetailsController {
     }
     @GetMapping("/{id}")
     public PostDetails get(@PathVariable Integer id) {
+        log.info("Getting PostDetail by post id: {}", id);
         return postDetailsRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("PostDetails not found: %s".formatted(id)));
     }

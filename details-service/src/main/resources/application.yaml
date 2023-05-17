@@ -19,3 +19,13 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8671/eureka
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+
+# https://amithkumarg.medium.com/distributed-tracing-with-spring-boot-micrometer-opentelemetry-and-jaeger-fafd5c0bd282
+
+logging:
+  pattern:
+    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'

@@ -31,10 +31,10 @@ eureka:
 post:
   details:
     service:
-      baseUrl: POST-DETAILS-SERVICE/api/post-details
+      baseUrl: http://POST-DETAILS-SERVICE/api/post-details
 comment:
   service:
-    baseUrl: COMMENT-SERVICE/api/comments
+    baseUrl: http://COMMENT-SERVICE/api/comments
 
 
 resilience4j:
@@ -78,3 +78,6 @@ management:
       probability: 1.0
 
 # https://amithkumarg.medium.com/distributed-tracing-with-spring-boot-micrometer-opentelemetry-and-jaeger-fafd5c0bd282
+logging:
+  pattern:
+    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'

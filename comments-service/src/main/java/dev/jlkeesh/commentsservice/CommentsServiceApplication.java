@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.ws.rs.GET;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.UuidGenerator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -30,6 +31,7 @@ public class CommentsServiceApplication {
 @RestController
 @RequestMapping("/api/comments")
 @RequiredArgsConstructor
+@Slf4j
 class CommentController {
 
     private final CommentRepository commentRepository;
@@ -45,10 +47,10 @@ class CommentController {
 
     @GetMapping("/{postId}/post")
     public List<Comment> getAllByPostID(@PathVariable Integer postId) throws InterruptedException {
-        System.out.println("Retrying ::: " + System.currentTimeMillis());
-        if (false)
+        log.info("Getting all comments by post id: {}", postId);
+        /*if (false)
             throw new RuntimeException("Error From ELSHOD");
-        /*TimeUnit.SECONDS.sleep(2);*/
+        *//*TimeUnit.SECONDS.sleep(2);*/
         return commentRepository.findAllByPostID(postId);
     }
 
