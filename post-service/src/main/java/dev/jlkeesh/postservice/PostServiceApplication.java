@@ -1,12 +1,8 @@
 package dev.jlkeesh.postservice;
 
 
-import feign.Feign;
 import feign.RetryableException;
 import feign.Retryer;
-import io.github.resilience4j.bulkhead.annotation.Bulkhead;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.retry.annotation.Retry;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
