@@ -39,13 +39,13 @@
     <root level="info">
         <appender-ref ref="RollingFile"/>
         <appender-ref ref="Console"/>
-        <appender-ref ref="logstash"/>
+<!--        <appender-ref ref="logstash"/>-->
     </root> 0
 
     <logger name="dev.jlkeesh" level="info" additivity="false">
         <appender-ref ref="RollingFile"/>
         <appender-ref ref="Console"/>
-        <appender-ref ref="logstash"/>
+<!--        <appender-ref ref="logstash"/>-->
     </logger>
 
 </configuration>
