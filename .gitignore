@@ -165,3 +165,6 @@ fabric.properties
 /config-service/.mvn/wrapper/maven-wrapper.properties
 /config-service/mvnw
 /config-service/mvnw.cmd
+/gateway/.mvn/wrapper/maven-wrapper.properties
+/gateway/mvnw
+/gateway/mvnw.cmd
